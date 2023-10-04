@@ -1,3 +1,12 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# CatUserBot #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Copyright (C) 2020-2023 by TgCatUB@Github.
+
+# This file is part of: https://github.com/TgCatUB/catuserbot
+# and is released under the "GNU v3.0 License Agreement".
+
+# Please see: https://github.com/TgCatUB/catuserbot/blob/master/LICENSE
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 import io
 import os
 from random import randint, uniform
@@ -7,11 +16,11 @@ from telethon.errors.rpcerrorlist import YouBlockedUserError
 from telethon.tl.functions.contacts import UnblockRequest as unblock
 from telethon.tl.types import DocumentAttributeFilename
 
-from userbot import catub
+from userbot import Convert, catub
 
-from ..core.managers import edit_or_reply
+from ..core.managers import edit_delete, edit_or_reply
 from ..helpers.functions import delete_conv
-from ..helpers.utils import media_to_pic, reply_id
+from ..helpers.utils import reply_id
 
 plugin_category = "extra"
 
@@ -71,9 +80,7 @@ async def check_media(reply_message):
             data = reply_message.media.document
         else:
             return False
-    if not data or data is None:
-        return False
-    return data
+    return False if not data or data is None else data
 
 
 @catub.cat_cmd(
@@ -90,7 +97,12 @@ async def frybot(event):
     reply_message = await event.get_reply_message()
     if not event.reply_to_msg_id or not reply_message.media:
         return await edit_delete(event, "```Reply to a media to fry it...```", 10)
-    output = await media_to_pic(event, reply_message)
+    output = await Convert.to_image(
+        event,
+        reply_message,
+        dirct="./temp",
+        file="frybot.png",
+    )
     if output[1] is None:
         return await edit_delete(
             output[0], "__Unable to extract image from the replied message.__", 10

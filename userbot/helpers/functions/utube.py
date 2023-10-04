@@ -1,3 +1,12 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# CatUserBot #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Copyright (C) 2020-2023 by TgCatUB@Github.
+
+# This file is part of: https://github.com/TgCatUB/catuserbot
+# and is released under the "GNU v3.0 License Agreement".
+
+# Please see: https://github.com/TgCatUB/catuserbot/blob/master/LICENSE
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 import os
 import re
 import urllib.request
@@ -44,13 +53,11 @@ async def yt_search(cat):
         k = 0
         for i in user_data:
             if user_data:
-                video_link.append("https://www.youtube.com/watch?v=" + user_data[k])
+                video_link.append(f"https://www.youtube.com/watch?v={user_data[k]}")
             k += 1
             if k > 3:
                 break
-        if video_link:
-            return video_link[0]
-        return "Couldnt fetch results"
+        return video_link[0] if video_link else "Couldnt fetch results"
     except Exception:
         return "Couldnt fetch results"
 
@@ -139,11 +146,12 @@ def get_choice_by_id(choice_id, media_type: str):
         disp_str = "best(video+audio)[webm/mp4]"
     else:
         disp_str = str(choice_id)
-        if media_type == "v":
-            # mp4 video quality + best compatible audio
-            choice_str = f"{disp_str}+(258/256/140/bestaudio[ext=m4a])/best"
-        else:  # Audio
-            choice_str = disp_str
+        choice_str = (
+            f"{disp_str}+(258/256/140/bestaudio[ext=m4a])/best"
+            if media_type == "v"
+            else disp_str
+        )
+
     return choice_str, disp_str
 
 
@@ -156,9 +164,7 @@ async def result_formatter(results: list):
         title = f'<a href={r.get("link")}><b>{r.get("title")}</b></a>\n'
         out = title
         if r.get("descriptionSnippet"):
-            out += "<code>{}</code>\n\n".format(
-                "".join(x.get("text") for x in r.get("descriptionSnippet"))
-            )
+            out += f'<code>{"".join(x.get("text") for x in r.get("descriptionSnippet"))}</code>\n\n'
         out += f'<b>❯  Duration:</b> {r.get("accessibility").get("duration")}\n'
         views = f'<b>❯  Views:</b> {r.get("viewCount").get("short")}\n'
         out += views
@@ -209,6 +215,7 @@ def yt_search_btns(
 
 @pool.run_in_thread
 def download_button(vid: str, body: bool = False):  # sourcery no-metrics
+    # sourcery skip: low-code-quality
     try:
         vid_data = yt_dlp.YoutubeDL({"no-playlist": True}).extract_info(
             BASE_YT_URL + vid, download=False

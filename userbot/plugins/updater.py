@@ -1,3 +1,12 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# CatUserBot #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Copyright (C) 2020-2023 by TgCatUB@Github.
+
+# This file is part of: https://github.com/TgCatUB/catuserbot
+# and is released under the "GNU v3.0 License Agreement".
+
+# Please see: https://github.com/TgCatUB/catuserbot/blob/master/LICENSE
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 import asyncio
 import contextlib
 import os
@@ -46,7 +55,6 @@ IS_SELECTED_DIFFERENT_BRANCH = (
     "in this case, Updater is unable to identify the branch to be updated."
     "please check out to an official branch, and re-start the updater."
 )
-
 
 # -- Constants End -- #
 
@@ -111,6 +119,10 @@ async def update_bot(event, repo, ups_rem, ac_br):
     sandy = await event.edit(
         "`Successfully Updated!\n" "Bot is restarting... Wait for a minute!`"
     )
+    if os.path.exists("config.py"):
+        from userbot.plugins.vps import reload_codebase
+
+        await reload_codebase()
     await event.client.reload(sandy)
 
 
@@ -332,9 +344,10 @@ async def upstream(event):
         ],
     },
 )
-async def variable(event):
+async def variable(event):  # sourcery skip: low-code-quality
     "To switch between good & bad cat"
     switch = "BADCAT"
+    config = "config.py"
     cmd = event.pattern_match.group(1).lower()
     if ENV:
         if (HEROKU_APP_NAME is None) or (HEROKU_API_KEY is None):
@@ -372,7 +385,7 @@ async def variable(event):
         if cmd == "good":
             if match and not BADCAT:
                 cat = await edit_or_reply(
-                    event, f"`Changing badcat to goodcat wait for 2-3 minutes.`"
+                    event, "`Changing badcat to goodcat wait for 2-3 minutes.`"
                 )
                 with open(config, "w") as f1:
                     f1.write(string)

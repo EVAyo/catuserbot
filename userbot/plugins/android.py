@@ -1,3 +1,12 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# CatUserBot #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Copyright (C) 2020-2023 by TgCatUB@Github.
+
+# This file is part of: https://github.com/TgCatUB/catuserbot
+# and is released under the "GNU v3.0 License Agreement".
+
+# Please see: https://github.com/TgCatUB/catuserbot/blob/master/LICENSE
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 import json
 
 from bs4 import BeautifulSoup
@@ -61,8 +70,8 @@ async def device_info(event):
             "certified-android-devices/master/by_device.json"
         ).text
     )
-    if results := data.get(codename):
-        reply = f"**Search results for `{codename}` :**\n\n"
+    if results := data.get(codename.lower()):
+        reply = f"**Search results for `{codename.lower()}` :**\n\n"
         for item in results:
             reply += (
                 f"**Brand**: `{item['brand']}`\n"

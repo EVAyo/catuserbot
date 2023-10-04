@@ -1,3 +1,12 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# CatUserBot #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Copyright (C) 2020-2023 by TgCatUB@Github.
+
+# This file is part of: https://github.com/TgCatUB/catuserbot
+# and is released under the "GNU v3.0 License Agreement".
+
+# Please see: https://github.com/TgCatUB/catuserbot/blob/master/LICENSE
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 import random
 import re
 from datetime import datetime
@@ -16,7 +25,7 @@ from ..sql_helper import global_collectionjson as sql
 from ..sql_helper import global_list as sqllist
 from ..sql_helper import pmpermit_sql
 from ..sql_helper.globals import addgvar, delgvar, gvarstatus
-from . import mention
+from . import BOTLOG_CHATID, mention
 
 plugin_category = "utils"
 LOGS = logging.getLogger(__name__)
@@ -32,6 +41,7 @@ PMPERMIT_ = PMPERMIT()
 
 
 async def do_pm_permit_action(event, chat):  # sourcery no-metrics
+    # sourcery skip: low-code-quality
     reply_to_id = await reply_id(event)
     try:
         PM_WARNS = sql.get_collection("pmwarns").json
@@ -71,7 +81,7 @@ async def do_pm_permit_action(event, chat):  # sourcery no-metrics
                 del PMMESSAGE_CACHE[str(chat.id)]
         except Exception as e:
             LOGS.info(str(e))
-        custompmblock = gvarstatus("pmblock") or None
+        custompmblock = gvarstatus("PM_BLOCK") or None
         if custompmblock is not None:
             USER_BOT_WARN_ZERO = custompmblock.format(
                 mention=mention,
@@ -108,7 +118,7 @@ async def do_pm_permit_action(event, chat):  # sourcery no-metrics
             )
         except BaseException:
             return
-    custompmpermit = gvarstatus("pmpermit_txt") or None
+    custompmpermit = gvarstatus("PM_TEXT") or None
     if custompmpermit is not None:
         USER_BOT_NO_WARN = custompmpermit.format(
             mention=mention,
@@ -138,7 +148,7 @@ Choose an option from below to specify the reason of your message and wait for m
 You have {warns}/{totalwarns} warns until you get blocked by the CatUserbot.
 
 Don't spam my inbox. say reason and wait until my response.__"""
-    addgvar("pmpermit_text", USER_BOT_NO_WARN)
+    addgvar("PM_TEXT", USER_BOT_NO_WARN)
     PM_WARNS[str(chat.id)] += 1
     try:
         if gvarstatus("pmmenu") is None:
@@ -147,7 +157,7 @@ Don't spam my inbox. say reason and wait until my response.__"""
             )
             msg = await results[0].click(chat.id, reply_to=reply_to_id, hide_via=True)
         else:
-            if PM_PIC := gvarstatus("pmpermit_pic"):
+            if PM_PIC := gvarstatus("PM_PIC"):
                 CAT = list(PM_PIC.split())
                 PIC = list(CAT)
                 CAT_IMG = random.choice(PIC)
@@ -761,6 +771,7 @@ async def approve_p_m(event):  # sourcery no-metrics
     },
 )
 async def tapprove_pm(event):  # sourcery no-metrics
+    # sourcery skip: low-code-quality
     "Temporarily approve user to pm"
     if gvarstatus("pmpermit") is None:
         return await edit_delete(

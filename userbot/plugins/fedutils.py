@@ -1,10 +1,21 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# CatUserBot #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Copyright (C) 2020-2023 by TgCatUB@Github.
+
+# This file is part of: https://github.com/TgCatUB/catuserbot
+# and is released under the "GNU v3.0 License Agreement".
+
+# Please see: https://github.com/TgCatUB/catuserbot/blob/master/LICENSE
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 import asyncio
+import contextlib
 
 from telethon.errors.rpcerrorlist import YouBlockedUserError
 from telethon.tl.functions.contacts import UnblockRequest as unblock
 
 from userbot import BOTLOG, BOTLOG_CHATID, catub
 
+from ..Config import Config
 from ..core.logger import logging
 from ..core.managers import edit_delete, edit_or_reply
 from ..helpers.utils import _format, get_user_from_event, reply_id
@@ -213,6 +224,7 @@ async def group_unfban(event):
     },
 )
 async def quote_search(event):  # sourcery no-metrics
+    # sourcery skip: low-code-quality
     "Add the federation to database."
     fedgroup = event.pattern_match.group(1)
     fedid = event.pattern_match.group(2)
@@ -254,10 +266,8 @@ async def quote_search(event):  # sourcery no-metrics
                         fedfile = open(fed_file, errors="ignore")
                         lines = fedfile.readlines()
                         for line in lines:
-                            try:
+                            with contextlib.suppress(Exception):
                                 fedidstoadd.append(line[:36])
-                            except Exception:
-                                pass
                 else:
                     text_lines = response.text.split("`")
                     fedidstoadd.extend(
@@ -415,9 +425,8 @@ async def quote_search(event):
             event, "__There is no such fedgroup in your database.__"
         )
     if output != "" and fedgroup:
-        output = (
-            f"**The list of feds in the category** `{fedgroup}` **are:**\n" + output
-        )
+        output = f"**The list of feds in the category** `{fedgroup}` **are:**\n{output}"
+
     elif output != "":
         output = "**The list of all feds in your database are :**\n" + output
     else:

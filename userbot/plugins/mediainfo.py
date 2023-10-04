@@ -1,5 +1,13 @@
-# plugin by @deleteduser420
-# ported to telethon by @mrconfused (@sandy1709)
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# CatUserBot #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Copyright (C) 2020-2023 by TgCatUB@Github.
+
+# This file is part of: https://github.com/TgCatUB/catuserbot
+# and is released under the "GNU v3.0 License Agreement".
+
+# Please see: https://github.com/TgCatUB/catuserbot/blob/master/LICENSE
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+import contextlib
 import os
 
 from userbot import catub
@@ -24,10 +32,8 @@ async def file_data(reply):
         hmm += f"Size  :  {humanbytes(reply.file.size)}<br>"
     if reply.date:
         hmm += f"Date  :  {_format.yaml_format(reply.date)}<br>"
-    try:
+    with contextlib.suppress(AttributeError):
         hmm += f"Id  :  {reply.file.id}<br>"
-    except AttributeError:
-        pass
     if reply.file.ext:
         hmm += f"Extension  :  '{reply.file.ext}'<br>"
     if reply.file.emoji:

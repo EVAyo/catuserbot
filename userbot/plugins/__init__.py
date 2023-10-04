@@ -1,10 +1,18 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# CatUserBot #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Copyright (C) 2020-2023 by TgCatUB@Github.
+
+# This file is part of: https://github.com/TgCatUB/catuserbot
+# and is released under the "GNU v3.0 License Agreement".
+
+# Please see: https://github.com/TgCatUB/catuserbot/blob/master/LICENSE
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 import math
 import os
 import re
 import time
 
 import heroku3
-import lottie
 import requests
 import spamwatch as spam_watch
 from validators.url import url
@@ -15,7 +23,7 @@ from ..core.logger import logging
 from ..core.managers import edit_delete, edit_or_reply
 from ..core.session import catub
 from ..helpers import *
-from ..helpers.utils import _cattools, _catutils, _format, install_pip, reply_id
+from ..helpers.utils import _catutils, _format, install_pip, reply_id
 from ..sql_helper.globals import gvarstatus
 
 # =================== CONSTANT ===================
@@ -58,8 +66,7 @@ if not os.path.isdir(Config.TMP_DOWNLOAD_DIRECTORY):
 
 # thumb image
 if Config.THUMB_IMAGE is not None:
-    check = url(Config.THUMB_IMAGE)
-    if check:
+    if check := url(Config.THUMB_IMAGE):
         try:
             with open(thumb_image_path, "wb") as f:
                 f.write(requests.get(Config.THUMB_IMAGE).content)
@@ -76,15 +83,3 @@ def set_key(dictionary, key, value):
         dictionary[key].append(value)
     else:
         dictionary[key] = [dictionary[key], value]
-
-
-async def make_gif(event, reply, quality=None, fps=None):
-    fps = fps or 1
-    quality = quality or 256
-    result_p = os.path.join("temp", "animation.gif")
-    animation = lottie.parsers.tgs.parse_tgs(reply)
-    with open(result_p, "wb") as result:
-        await _catutils.run_sync(
-            lottie.exporters.gif.export_gif, animation, result, quality, fps
-        )
-    return result_p

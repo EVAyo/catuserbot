@@ -1,3 +1,12 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# CatUserBot #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Copyright (C) 2020-2023 by TgCatUB@Github.
+
+# This file is part of: https://github.com/TgCatUB/catuserbot
+# and is released under the "GNU v3.0 License Agreement".
+
+# Please see: https://github.com/TgCatUB/catuserbot/blob/master/LICENSE
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 from sqlalchemy import Column, String, UnicodeText
 
 from . import BASE, SESSION
@@ -23,7 +32,7 @@ class ChatBot(BASE):
         self.chat_type = chat_type
 
     def __eq__(self, other):
-        return bool(
+        return (
             isinstance(other, ChatBot)
             and self.chat_id == other.chat_id
             and self.user_id == other.user_id

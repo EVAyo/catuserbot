@@ -1,8 +1,12 @@
-"""
-imported from nicegrill
-modified by @mrconfused
-QuotLy: Avaible commands: .qbot
-"""
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# CatUserBot #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Copyright (C) 2020-2023 by TgCatUB@Github.
+
+# This file is part of: https://github.com/TgCatUB/catuserbot
+# and is released under the "GNU v3.0 License Agreement".
+
+# Please see: https://github.com/TgCatUB/catuserbot/blob/master/LICENSE
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Imported from nicegrill
 
 import io
 import os
@@ -16,13 +20,14 @@ from telethon import events
 from telethon.errors.rpcerrorlist import YouBlockedUserError
 from telethon.utils import get_display_name
 
-from userbot import catub
+from userbot import Convert, catub
 
+from ..core.logger import logging
 from ..core.managers import edit_delete, edit_or_reply
-from ..helpers import convert_tosticker, media_type, process
-from ..helpers.utils import _cattools, get_user_from_event, reply_id
+from ..helpers import file_check, fontTest, media_type, process, soft_deEmojify
+from ..helpers.utils import get_user_from_event, reply_id
 
-FONT_FILE_TO_USE = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
+LOGS = logging.getLogger(__name__)
 
 plugin_category = "fun"
 
@@ -51,7 +56,7 @@ def get_warp_length(width):
         "examples": ["{tr}qpic CatUserbot.", "{tr}qpic -b CatUserbot."],
     },
 )
-async def q_pic(event):  # sourcery no-metrics
+async def q_pic(event):  # sourcery no-metrics  # sourcery skip: low-code-quality
     args = event.pattern_match.group(1)
     black = re.findall(r"-b", args)
     sticker = re.findall(r"-s", args)
@@ -69,8 +74,10 @@ async def q_pic(event):  # sourcery no-metrics
         return await edit_delete(
             event, "__Provide input along with cmd or reply to text message.__"
         )
+    text = soft_deEmojify(text)
     catevent = await edit_or_reply(event, "__Making Quote pic....__")
-    mediatype = media_type(reply)
+    file_check(re=False, me=False, mo=False, it=False)
+    mediatype = await media_type(reply)
     if (
         (not reply)
         or (not mediatype)
@@ -83,7 +90,9 @@ async def q_pic(event):  # sourcery no-metrics
         user = reply.sender_id if reply else event.client.uid
         pfp = await event.client.download_profile_photo(user)
     else:
-        imag = await _cattools.media_to_pic(event, reply, noedits=True)
+        imag = await Convert.to_image(
+            event, reply, dirct="./temp", file="quotly.png", noedits=True
+        )
         if imag[1] is None:
             return await edit_delete(
                 imag[0], "__Unable to extract image from the replied message.__"
@@ -99,13 +108,14 @@ async def q_pic(event):  # sourcery no-metrics
         pfp = "profilepic.jpg"
         with open(pfp, "wb") as f:
             f.write(
-                requests.get(
-                    "https://telegra.ph/file/1fd74fa4a4dbf1655f3ec.jpg"
-                ).content
+                requests.get("https://graph.org/file/1fd74fa4a4dbf1655f3ec.jpg").content
             )
     text = "\n".join(textwrap.wrap(text, 25))
     text = f"“{text}„"
-    font = ImageFont.truetype(FONT_FILE_TO_USE, 50)
+    textf = (
+        "./temp/ArialUnicodeMS.ttf" if await fontTest(text[0]) else "./temp/Quivira.otf"
+    )
+    textfont = ImageFont.truetype(textf, 50)
     img = Image.open(pfp)
     if black:
         img = img.convert("L")
@@ -116,18 +126,23 @@ async def q_pic(event):  # sourcery no-metrics
     nimg.putalpha(150)
     img.paste(nimg, (nw // 2, nh // 2), nimg)
     draw = ImageDraw.Draw(img)
-    tw, th = draw.textsize(text=text, font=font)
+    tw, th = draw.textsize(text=text, font=textfont)
     x, y = (w - tw) // 2, (h - th) // 2
-    draw.text((x, y), text=text, font=font, fill="#ffffff", align="center")
+    draw.text((x, y), text=text, font=textfont, fill="#ffffff", align="center")
     if user is not None:
-        credit = "\n".join(
-            wrap(f"by {get_display_name(user)}", int(get_warp_length(w / 2.5)))
+        usrname = get_display_name(user)
+        namef = (
+            "./temp/ArialUnicodeMS.ttf"
+            if await fontTest(usrname[0])
+            else "./temp/Quivira.otf"
         )
-        tw, th = draw.textsize(text=credit, font=font)
+        namefont = ImageFont.truetype(namef, 50)
+        credit = "\n".join(wrap(f"by {usrname}", int(get_warp_length(w / 2.5))))
+        tw, th = draw.textsize(text=credit, font=namefont)
         draw.text(
             ((w - nw + tw) // 1.6, (h - nh - th)),
             text=credit,
-            font=font,
+            font=namefont,
             fill="#ffffff",
             align="left",
         )
@@ -175,7 +190,7 @@ async def stickerchat(catquotes):
                 catquotes, "`I cant quote the message . reply to a message`"
             )
         fetchmsg = reply.message
-        mediatype = media_type(reply)
+        mediatype = await media_type(reply)
     if cmd == "rq":
         repliedreply = await reply.get_reply_message()
     elif cmd == "frq":
@@ -212,10 +227,12 @@ async def stickerchat(catquotes):
         return
     outfi = os.path.join("./temp", "sticker.png")
     catmsg.save(outfi)
-    endfi = convert_tosticker(outfi)
-    await catquotes.client.send_file(catquotes.chat_id, endfi, reply_to=reply)
+    endfi = await Convert.to_sticker(
+        catquotes, outfi, file="stickerchat.webp", noedits=True
+    )
+    await catquotes.client.send_file(catquotes.chat_id, endfi[1], reply_to=reply)
     await catevent.delete()
-    os.remove(endfi)
+    os.remove(endfi[1])
 
 
 @catub.cat_cmd(
@@ -233,23 +250,26 @@ async def _(event):
     reply = await event.get_reply_message()
     message = ""
     messages_id = []
-    if reply:
-        if input_str and input_str.isnumeric():
-            messages_id.append(reply.id)
-            async for message in event.client.iter_messages(
-                event.chat_id,
-                limit=(int(input_str) - 1),
-                offset_id=reply.id,
-                reverse=True,
-            ):
-                if message.id != event.id:
-                    messages_id.append(message.id)
-        elif input_str:
-            message = input_str
-        else:
-            messages_id.append(reply.id)
-    elif input_str:
+    if reply and input_str and input_str.isnumeric():
+        messages_id.append(reply.id)
+        async for message in event.client.iter_messages(
+            event.chat_id,
+            limit=(int(input_str) - 1),
+            offset_id=reply.id,
+            reverse=True,
+        ):
+            if message.id != event.id:
+                messages_id.append(message.id)
+    elif (
+        reply
+        and (not input_str or not input_str.isnumeric())
+        and input_str
+        or not reply
+        and input_str
+    ):
         message = input_str
+    elif reply and (not input_str or not input_str.isnumeric()) and not input_str:
+        messages_id.append(reply.id)
     else:
         return await edit_delete(
             event, "`Either reply to message or give input to function properly`"

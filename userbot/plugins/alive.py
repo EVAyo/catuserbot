@@ -1,3 +1,12 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# CatUserBot #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Copyright (C) 2020-2023 by TgCatUB@Github.
+
+# This file is part of: https://github.com/TgCatUB/catuserbot
+# and is released under the "GNU v3.0 License Agreement".
+
+# Please see: https://github.com/TgCatUB/catuserbot/blob/master/LICENSE
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 import random
 import re
 import time
@@ -94,6 +103,16 @@ temp = """{ALIVE_TEXT}
 **{EMOJI} Master:** {mention}"""
 
 
+def catalive_text():
+    EMOJI = gvarstatus("ALIVE_EMOJI") or "  ✥ "
+    cat_caption = "**Catuserbot is Up and Running**\n"
+    cat_caption += f"**{EMOJI} Telethon version :** `{version.__version__}\n`"
+    cat_caption += f"**{EMOJI} Catuserbot Version :** `{catversion}`\n"
+    cat_caption += f"**{EMOJI} Python Version :** `{python_version()}\n`"
+    cat_caption += f"**{EMOJI} Master:** {mention}\n"
+    return cat_caption
+
+
 @catub.cat_cmd(
     pattern="ialive$",
     command=("ialive", plugin_category),
@@ -108,13 +127,7 @@ temp = """{ALIVE_TEXT}
 async def amireallyalive(event):
     "A kind of showing bot details by your inline bot"
     reply_to_id = await reply_id(event)
-    EMOJI = gvarstatus("ALIVE_EMOJI") or "  ✥ "
-    cat_caption = "**Catuserbot is Up and Running**\n"
-    cat_caption += f"**{EMOJI} Telethon version :** `{version.__version__}\n`"
-    cat_caption += f"**{EMOJI} Catuserbot Version :** `{catversion}`\n"
-    cat_caption += f"**{EMOJI} Python Version :** `{python_version()}\n`"
-    cat_caption += f"**{EMOJI} Master:** {mention}\n"
-    results = await event.client.inline_query(Config.TG_BOT_USERNAME, cat_caption)
+    results = await event.client.inline_query(Config.TG_BOT_USERNAME, "ialive")
     await results[0].click(event.chat_id, reply_to=reply_to_id, hide_via=True)
     await event.delete()
 

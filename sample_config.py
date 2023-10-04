@@ -34,11 +34,18 @@ class Config(object):
     )
     # External plugins repo
     EXTERNAL_REPO = os.environ.get("EXTERNAL_REPO", None)
-    if EXTERNAL_REPO and (EXTERNAL_REPO.lower() != "no") and not url(EXTERNAL_REPO):
-        EXTERNAL_REPO = "https://github.com/TgCatUB/CatPlugins"
+    if bool(EXTERNAL_REPO and (EXTERNAL_REPO.lower() != "false")):
+        if not url(EXTERNAL_REPO):
+            EXTERNAL_REPO = "https://github.com/TgCatUB/CatPlugins"
+    else:
+        EXTERNAL_REPO = None
     # if you need badcat plugins use the following vars
-    BADCAT = os.environ.get("BADCAT", "no")
-    BADCAT = bool(BADCAT and (BADCAT.lower() != "no"))
+    BADCAT = os.environ.get("BADCAT", False)
+    BADCAT = bool(BADCAT and (BADCAT.lower() != "false"))
+    # for vc plugins
+    VCMODE = os.environ.get("VCMODE", False)
+    VCMODE = bool(VCMODE and (VCMODE.lower() != "false"))
+    VC_SESSION = os.environ.get("VC_SESSION", None)
     # BASIC and MAIN CONFIG VARS
     # for profile default name
     # Set this value with group id of private group(can be found this value by .id)
@@ -69,7 +76,7 @@ class Config(object):
     TELEGRAPH_SHORT_NAME = os.environ.get("TELEGRAPH_SHORT_NAME", "catuserbot")
     # for custom thumb image set this with your required thumb telegraoh link
     THUMB_IMAGE = os.environ.get(
-        "THUMB_IMAGE", "https://telegra.ph/file/ca95524e4734b0d5461b5.jpg"
+        "THUMB_IMAGE", "https://graph.org/file/ca95524e4734b0d5461b5.jpg"
     )
     # specify NO_LOAD with plugin names for not loading in userbot
     NO_LOAD = list(os.environ.get("NO_LOAD", "").split())
@@ -106,7 +113,7 @@ class Config(object):
     REM_BG_API_KEY = os.environ.get("REM_BG_API_KEY", None)
     # Get this value from https://free.currencyconverterapi.com/
     CURRENCY_API = os.environ.get("CURRENCY_API", None)
-    # Google Drive plugin https://telegra.ph/G-Drive-guide-for-catuserbot-01-01
+    # Google Drive plugin https://graph.org/G-Drive-guide-for-catuserbot-01-01
     G_DRIVE_CLIENT_ID = os.environ.get("G_DRIVE_CLIENT_ID", None)
     G_DRIVE_CLIENT_SECRET = os.environ.get("G_DRIVE_CLIENT_SECRET", None)
     G_DRIVE_FOLDER_ID = os.environ.get("G_DRIVE_FOLDER_ID", None)
@@ -116,19 +123,19 @@ class Config(object):
     TG_2STEP_VERIFICATION_CODE = os.environ.get("TG_2STEP_VERIFICATION_CODE", None)
     # JustWatch Country for watch plugin
     WATCH_COUNTRY = os.environ.get("WATCH_COUNTRY", "IN")
-    # Last.fm plugin  https://telegra.ph/Guide-for-LASTFM-02-03
+    # Last.fm plugin  https://graph.org/Guide-for-LASTFM-02-03
     BIO_PREFIX = os.environ.get("BIO_PREFIX", None)
     LASTFM_API = os.environ.get("LASTFM_API", None)
     LASTFM_SECRET = os.environ.get("LASTFM_SECRET", None)
     LASTFM_USERNAME = os.environ.get("LASTFM_USERNAME", None)
-    LASTFM_PASSWORD_PLAIN = os.environ.get("LASTFM_PASSWORD", None)
+    LASTFM_PASSWORD = os.environ.get("LASTFM_PASSWORD", None)
+    # Open ai api // get from here: https://platform.openai.com/account/api-keys
+    OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", None)
     # Spotify API for spotify.py // get from here :  https://developer.spotify.com/dashboard/login
     SPOTIFY_CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID", None)
     SPOTIFY_CLIENT_SECRET = os.environ.get("SPOTIFY_CLIENT_SECRET", None)
     # SpamWatch API you can get it from get api from http://t.me/SpamWatchBot?start=token
     SPAMWATCH_API = os.environ.get("SPAMWATCH_API", None)
-    # can get from https://coffeehouse.intellivoid.net/
-    RANDOM_STUFF_API_KEY = os.environ.get("RANDOM_STUFF_API_KEY", None)
     # github vars
     GITHUB_ACCESS_TOKEN = os.environ.get("GITHUB_ACCESS_TOKEN", None)
     GIT_REPO_NAME = os.environ.get("GIT_REPO_NAME", None)
@@ -145,9 +152,6 @@ class Config(object):
         until_date=None, view_messages=None, send_messages=True
     )
     CHROME_BIN = os.environ.get("CHROME_BIN", "/app/.apt/usr/bin/google-chrome")
-    CHROME_DRIVER = os.environ.get(
-        "CHROME_DRIVER", "/app/.chromedriver/bin/chromedriver"
-    )
     # for sed plugin
     GROUP_REG_SED_EX_BOT_S = os.environ.get(
         "GROUP_REG_SED_EX_BOT_S", r"(regex|moku|BananaButler_|rgx|l4mR)bot"
@@ -162,12 +166,14 @@ class Config(object):
     CATUBLOGO = None
     BOTLOG = False
     BOTLOG_CHATID = 0
-    # extra plugins realted vars below  4
+    # extra plugins realted vars below
     EXTERNAL_REPOBRANCH = os.environ.get("EXTERNAL_REPOBRANCH", "main")
     BADCAT_REPO = os.environ.get("BADCAT_REPO", "https://github.com/TgCatUB/CatPlugins")
     if BADCAT_REPO and not url(BADCAT_REPO):
         BADCAT_REPO = "https://github.com/TgCatUB/CatPlugins"
     BADCAT_REPOBRANCH = os.environ.get("BADCAT_REPOBRANCH", "badcat")
+    VC_REPO = os.environ.get("VC_REPO", "https://github.com/TgCatUB/CatVCPlayer")
+    VC_REPOBRANCH = os.environ.get("VC_REPOBRANCH", "test")
 
 
 class Production(Config):

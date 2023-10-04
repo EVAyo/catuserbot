@@ -1,5 +1,15 @@
-import json
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# CatUserBot #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Copyright (C) 2020-2023 by TgCatUB@Github.
+
+# This file is part of: https://github.com/TgCatUB/catuserbot
+# and is released under the "GNU v3.0 License Agreement".
+
+# Please see: https://github.com/TgCatUB/catuserbot/blob/master/LICENSE
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+import asyncio
 import os
+import re
 import zipfile
 from random import choice
 from textwrap import wrap
@@ -7,25 +17,20 @@ from uuid import uuid4
 
 import requests
 from googletrans import Translator
-
-from ..utils.extdl import install_pip
-from ..utils.utils import runcmd
-
-try:
-    from imdb import IMDb
-except ModuleNotFoundError:
-    install_pip("IMDbPY")
-    from imdb import IMDb
-
-from PIL import Image, ImageColor, ImageDraw, ImageFont, ImageOps
+from html_telegraph_poster import TelegraphPoster
+from imdb import Cinemagoer
+from PIL import Image, ImageColor, ImageDraw, ImageFilter, ImageFont, ImageOps
+from telethon import functions, types
 from telethon.errors.rpcerrorlist import YouBlockedUserError
 from telethon.tl.functions.contacts import UnblockRequest as unblock
 
 from ...Config import Config
+from ...core.logger import logging
 from ...sql_helper.globals import gvarstatus
 from ..resources.states import states
 
-imdb = IMDb()
+LOGS = logging.getLogger(__name__)
+imdb = Cinemagoer()
 
 mov_titles = [
     "long imdb title",
@@ -70,18 +75,12 @@ def rand_key():
     return str(uuid4())[:8]
 
 
-async def sanga_seperator(sanga_list):
-    for i in sanga_list:
-        if i.startswith("🔗"):
-            sanga_list.remove(i)
-    s = 0
-    for i in sanga_list:
-        if i.startswith("Username History"):
-            break
-        s += 1
-    usernames = sanga_list[s:]
-    names = sanga_list[:s]
-    return names, usernames
+def sanga_seperator(sanga_list):
+    string = "".join(info[info.find("\n") + 1 :] for info in sanga_list)
+    string = re.sub(r"^$\n", "", string, flags=re.MULTILINE)
+    name, username = string.split("Usernames**")
+    name = name.split("Names")[1]
+    return name, username
 
 
 # covid india data
@@ -89,6 +88,34 @@ async def covidindia(state):
     url = "https://www.mohfw.gov.in/data/datanew.json"
     req = requests.get(url).json()
     return next((req[states.index(i)] for i in states if i == state), None)
+
+
+async def post_to_telegraph(
+    page_title,
+    html_format_content,
+    auth_name="CatUserbot",
+    auth_url="https://t.me/catuserbot17",
+):
+    post_client = TelegraphPoster(use_api=True)
+    post_client.create_api_token(auth_name)
+    post_page = post_client.post(
+        title=page_title,
+        author=auth_name,
+        author_url=auth_url,
+        text=html_format_content,
+    )
+    return f"https://graph.org/{post_page['path']}"
+
+
+async def GetStylesGraph():
+    html = "".join(
+        [
+            f'<h2>{i["name"]}:</h2> <pre>{i["id"]}</pre><br/><img src="{i["photo_url"]}">⁪⁬⁮⁮⁮⁮'
+            for i in requests.get("https://paint.api.wombo.ai/api/styles").json()
+            if i["is_premium"] == False
+        ]
+    )
+    return await post_to_telegraph("List Of ArtStyles", html)
 
 
 # --------------------------------------------------------------------------------------------------------------------#
@@ -107,45 +134,20 @@ async def age_verification(event, reply_to_id):
     return True
 
 
-async def fileinfo(file):
-    x, y, z, s = await runcmd(f"mediainfo '{file}' --Output=JSON")
-    cat_json = json.loads(x)["media"]["track"]
-    dic = {
-        "path": file,
-        "size": int(cat_json[0]["FileSize"]),
-        "extension": cat_json[0]["FileExtension"],
-    }
+async def unsavegif(event, sandy):
     try:
-        if "VideoCount" or "AudioCount" or "ImageCount" in cat_json[0]:
-            dic["format"] = cat_json[0]["Format"]
-            dic["type"] = cat_json[1]["@type"]
-            if "ImageCount" not in cat_json[0]:
-                dic["duration"] = int(float(cat_json[0]["Duration"]))
-                dic["bitrate"] = int(int(cat_json[0]["OverallBitRate"]) / 1000)
-            if "VideoCount" or "ImageCount" in cat_json[0]:
-                dic["height"] = int(cat_json[1]["Height"])
-                dic["width"] = int(cat_json[1]["Width"])
-    except (IndexError, KeyError):
-        pass
-    return dic
-
-
-async def animator(media, mainevent, textevent=None):
-    # //Hope u dunt kang :/ @Jisan7509
-    if not os.path.isdir(Config.TEMP_DIR):
-        os.makedirs(Config.TEMP_DIR)
-    BadCat = await mainevent.client.download_media(media, Config.TEMP_DIR)
-    file = await fileinfo(BadCat)
-    h = file["height"]
-    w = file["width"]
-    w, h = (-1, 512) if h > w else (512, -1)
-    if textevent:
-        await textevent.edit("__🎞Converting into Animated sticker..__")
-    await runcmd(
-        f"ffmpeg -to 00:00:02.900 -i '{BadCat}' -vf scale={w}:{h} -c:v libvpx-vp9 -crf 30 -b:v 560k -maxrate 560k -bufsize 256k -an animate.webm"
-    )  # pain
-    os.remove(BadCat)
-    return "animate.webm"
+        await event.client(
+            functions.messages.SaveGifRequest(
+                id=types.InputDocument(
+                    id=sandy.media.document.id,
+                    access_hash=sandy.media.document.access_hash,
+                    file_reference=sandy.media.document.file_reference,
+                ),
+                unsave=True,
+            )
+        )
+    except Exception as e:
+        LOGS.info(str(e))
 
 
 # --------------------------------------------------------------------------------------------------------------------#
@@ -160,7 +162,7 @@ async def clippy(borg, msg, chat_id, reply_to_id):
         try:
             msg = await conv.send_file(msg)
         except YouBlockedUserError:
-            await catub(unblock("clippy"))
+            await borg(unblock("clippy"))
             msg = await conv.send_file(msg)
         pic = await conv.get_response()
         await borg.send_read_acknowledge(conv.chat_id)
@@ -200,9 +202,15 @@ async def delete_conv(event, chat, from_message):
 
 # ----------------------------------------------## Tools ##------------------------------------------------------------#
 
+
 # https://www.tutorialspoint.com/How-do-you-split-a-list-into-evenly-sized-chunks-in-Python
 def sublists(input_list: list, width: int = 3):
     return [input_list[x : x + width] for x in range(0, len(input_list), width)]
+
+
+# split string into fixed length substrings
+def chunkstring(string, length):
+    return (string[0 + i : length + i] for i in range(0, len(string), length))
 
 
 # unziping file
@@ -222,7 +230,7 @@ async def getTranslate(text, **kwargs):
             result = translator.translate(text, **kwargs)
         except Exception:
             translator = Translator()
-            await sleep(0.1)
+            await asyncio.sleep(0.1)
     return result
 
 
@@ -242,6 +250,43 @@ def reddit_thumb_link(preview, thumb=None):
 # ----------------------------------------------## Image ##------------------------------------------------------------#
 
 
+def format_image(filename):
+    img = Image.open(filename).convert("RGBA")
+    w, h = img.size
+    if w != h:
+        _min, _max = min(w, h), max(w, h)
+        bg = img.crop(
+            ((w - _min) // 2, (h - _min) // 2, (w + _min) // 2, (h + _min) // 2)
+        )
+        bg = bg.filter(ImageFilter.GaussianBlur(5))
+        bg = bg.resize((_max, _max))
+        img_new = Image.new("RGBA", (_max, _max), (255, 255, 255, 0))
+        img_new.paste(
+            bg, ((img_new.width - bg.width) // 2, (img_new.height - bg.height) // 2)
+        )
+        img_new.paste(img, ((img_new.width - w) // 2, (img_new.height - h) // 2))
+        img = img_new
+    img.save(filename)
+
+
+async def wall_download(piclink, query, ext=".jpg"):
+    try:
+        if not os.path.isdir("./temp"):
+            os.mkdir("./temp")
+        picpath = f"./temp/{query.title().replace(' ', '')}{ext}"
+        if os.path.exists(picpath):
+            i = 1
+            while os.path.exists(picpath) and i < 11:
+                picpath = f"./temp/{query.title().replace(' ', '')}-{i}{ext}"
+                i += 1
+        with open(picpath, "wb") as f:
+            f.write(requests.get(piclink).content)
+        return picpath
+    except Exception as e:
+        LOGS.info(str(e))
+        return None
+
+
 def ellipse_create(filename, size, border):
     img = Image.open(filename)
     img = img.resize((int(1024 / size), int(1024 / size)))
@@ -256,8 +301,7 @@ def ellipse_create(filename, size, border):
 
 def ellipse_layout_create(filename, size, border):
     x, mask = ellipse_create(filename, size, border)
-    img = ImageOps.expand(mask)
-    return img
+    return ImageOps.expand(mask)
 
 
 def text_draw(font_name, font_size, img, text, hight, stroke_width=0, stroke_fill=None):
@@ -294,7 +338,7 @@ def higlighted_text(
     direction=None,
     font_name=None,
     album_limit=None,
-):
+):  # sourcery skip: low-code-quality
     templait = Image.open(input_img)
     # resize image
     raw_width, raw_height = templait.size
@@ -320,8 +364,7 @@ def higlighted_text(
     for item in raw_text:
         input_text = "\n".join(wrap(item, int((40.0 / resized_width) * mask_size)))
         split_text = input_text.splitlines()
-        for final in split_text:
-            list_text.append(final)
+        list_text.extend(iter(split_text))
     texts = [list_text]
     if album and len(list_text) > lines:
         texts = [list_text[i : i + lines] for i in range(0, len(list_text), lines)]
@@ -413,6 +456,7 @@ def higlighted_text(
 
 
 # ----------------------------------------------## Sticker ##-----------------------------------------------------------#
+
 
 # for stickertxt
 async def waifutxt(text, chat_id, reply_to_id, bot):

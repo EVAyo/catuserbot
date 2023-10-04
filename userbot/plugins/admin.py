@@ -1,3 +1,12 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# CatUserBot #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Copyright (C) 2020-2023 by TgCatUB@Github.
+
+# This file is part of: https://github.com/TgCatUB/catuserbot
+# and is released under the "GNU v3.0 License Agreement".
+
+# Please see: https://github.com/TgCatUB/catuserbot/blob/master/LICENSE
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 import contextlib
 
 from telethon.errors import (
@@ -341,9 +350,11 @@ async def watcher(event):
             "{tr}mute <userid/username/reply>",
             "{tr}mute <userid/username/reply> <reason>",
         ],
-    },  # sourcery no-metrics
+    },
 )
-async def startmute(event):
+async def startmute(
+    event,
+):  # sourcery no-metri  # sourcery skip: low-code-quality, low-code-qualitycs
     "To mute a person in that paticular chat"
     if event.is_private:
         replied_user = await event.client.get_entity(event.chat_id)
@@ -669,7 +680,7 @@ async def _iundlt(event):  # sourcery no-metrics
     if not flag:
         for msg in adminlog:
             ruser = await event.client.get_entity(msg.old.from_id)
-            _media_type = media_type(msg.old)
+            _media_type = await media_type(msg.old)
             if _media_type is None:
                 deleted_msg += f"\n☞ __{msg.old.message}__ **Sent by** {_format.mentionuser(ruser.first_name ,ruser.id)}"
             else:
@@ -679,7 +690,7 @@ async def _iundlt(event):  # sourcery no-metrics
         main_msg = await edit_or_reply(catevent, deleted_msg)
         for msg in adminlog:
             ruser = await event.client.get_entity(msg.old.from_id)
-            _media_type = media_type(msg.old)
+            _media_type = await media_type(msg.old)
             if _media_type is None:
                 await main_msg.reply(
                     f"{msg.old.message}\n**Sent by** {_format.mentionuser(ruser.first_name ,ruser.id)}"

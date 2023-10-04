@@ -1,3 +1,12 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# CatUserBot #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Copyright (C) 2020-2023 by TgCatUB@Github.
+
+# This file is part of: https://github.com/TgCatUB/catuserbot
+# and is released under the "GNU v3.0 License Agreement".
+
+# Please see: https://github.com/TgCatUB/catuserbot/blob/master/LICENSE
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 import os
 from datetime import datetime as dt
 
@@ -13,8 +22,6 @@ from ..core.managers import edit_or_reply
 from . import reply_id
 
 plugin_category = "utils"
-
-# Userbot timezone
 
 
 FONT_FILE_TO_USE = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
@@ -49,7 +56,7 @@ async def get_tz(con):
     command=("time", plugin_category),
     info={
         "header": "To get current time of a paticular country",
-        "note": "For country names check [this link](https://telegra.ph/country-names-10-24)",
+        "note": "For country names check [this link](https://graph.org/country-names-10-24)",
         "usage": "{tr}time <country name/code> <timezone number>",
         "examples": "{tr}time Brazil 2",
     },

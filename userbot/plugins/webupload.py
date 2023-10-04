@@ -1,3 +1,14 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# CatUserBot #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Copyright (C) 2020-2023 by TgCatUB@Github.
+
+# This file is part of: https://github.com/TgCatUB/catuserbot
+# and is released under the "GNU v3.0 License Agreement".
+
+# Please see: https://github.com/TgCatUB/catuserbot/blob/master/LICENSE
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Special credits:
+# https://github.com/Total-Noob-69/X-tra-Telegram/blob/master/userbot/plugins/webupload.py
+
 import asyncio
 import json
 import os
@@ -14,9 +25,6 @@ from ..core.managers import edit_or_reply
 
 plugin_category = "misc"
 LOGS = logging.getLogger(__name__)
-
-# originally created by
-# https://github.com/Total-Noob-69/X-tra-Telegram/blob/master/userbot/plugins/webupload.py
 
 
 link_regex = re.compile(
@@ -59,8 +67,7 @@ async def labstack(event):
         "https://up.labstack.com/api/v1/links", json=files2, headers=headers2
     )
     r2json = json.loads(r2.text)
-
-    url = "https://up.labstack.com/api/v1/links/{}/send".format(r2json["code"])
+    url = f'https://up.labstack.com/api/v1/links/{r2json["code"]}/send'
     max_days = 7
     command_to_exec = [
         "curl",
@@ -80,8 +87,8 @@ async def labstack(event):
         return await editor.edit(exc.output.decode("UTF-8"))
     else:
         LOGS.info(t_response)
-        t_response_arry = "https://up.labstack.com/api/v1/links/{}/receive".format(
-            r2json["code"]
+        t_response_arry = (
+            f'https://up.labstack.com/api/v1/links/{r2json["code"]}/receive'
         )
     await editor.edit(
         t_response_arry + "\nMax Days:" + str(max_days), link_preview=False

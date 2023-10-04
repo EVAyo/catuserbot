@@ -1,26 +1,34 @@
-# Random RGB Sticklet by @PhycoNinja13b
-# modified by @UniBorg
-# imported from ppe-remix by @heyworld & @DeletedUser420
-# modified by @mrconfused
-# pengin & gandhi Yato
-# modified & improved by @jisan7509
-# RegEx by https://t.me/c/1220993104/500653 ( @SnapDragon7410 )
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# CatUserBot #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Copyright (C) 2020-2023 by TgCatUB@Github.
 
-import io
+# This file is part of: https://github.com/TgCatUB/catuserbot
+# and is released under the "GNU v3.0 License Agreement".
+
+# Please see: https://github.com/TgCatUB/catuserbot/blob/master/LICENSE
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Special credits:
+# @PhycoNinja13b <Telegram> (for Random RGB Sticklet)
+# @UniBorg <Telegram> (Modification)
+# @heyworld & @DeletedUser420 <Telegram> (imported from ppe-remix)
+#
+# @SnapDragon7410 <Telegram> (RegEx)
+# https://t.me/c/1220993104/500653
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 import os
 import random
 import textwrap
 import urllib
+from io import BytesIO
 
+import requests
 from PIL import Image, ImageDraw, ImageFont
-from telethon.tl.types import InputMessagesFilterDocument
 
-from userbot import catub
+from userbot import Convert, catub
 
 from ..core.managers import edit_delete, edit_or_reply
 from ..helpers.functions import (
     clippy,
-    convert_tosticker,
     deEmojify,
     hide_inlinebot,
     higlighted_text,
@@ -30,23 +38,6 @@ from ..helpers.functions import (
 from ..helpers.utils import reply_id
 
 plugin_category = "fun"
-
-
-async def get_font_file(client, channel_id, search_kw=""):
-    # first get the font messages
-    font_file_message_s = await client.get_messages(
-        entity=channel_id,
-        filter=InputMessagesFilterDocument,
-        # this might cause FLOOD WAIT,
-        # if used too many times
-        limit=None,
-        search=search_kw,
-    )
-    # get a random font from the list of fonts
-    # https://docs.python.org/3/library/random.html#random.choice
-    font_file_message = random.choice(font_file_message_s)
-    # download and return the file path
-    return await client.download_media(font_file_message)
 
 
 def file_checker(template):
@@ -88,73 +79,55 @@ async def waifu(animu):
     await waifutxt(text, animu.chat_id, reply_to_id, animu.client)
 
 
-# 12 21 28 30
 @catub.cat_cmd(
-    pattern="stcr ?(?:(.*?) ?; )?([\s\S]*)",
+    pattern="stcr(?:\s|$)([\s\S]*)",
     command=("stcr", plugin_category),
     info={
         "header": "your text as sticker.",
-        "usage": [
-            "{tr}stcr <text>",
-            "{tr}stcr <font file name> ; <text>",
-        ],
+        "usage": "{tr}stcr <text/reply>",
         "examples": "{tr}stcr hello",
     },
 )
 async def sticklet(event):
     "your text as sticker"
-    R = random.randint(0, 256)
-    G = random.randint(0, 256)
-    B = random.randint(0, 256)
+    RGB = tuple(random.sample(range(255), 3))
     reply_to_id = await reply_id(event)
-    # get the input text
-    # the text on which we would like to do the magic on
-    font_file_name = event.pattern_match.group(1)
-    if not font_file_name:
-        font_file_name = ""
-    sticktext = event.pattern_match.group(2)
-    reply_message = await event.get_reply_message()
+    sticktext = event.pattern_match.group(1)
+    reply = await event.get_reply_message()
+    if not sticktext and reply:
+        sticktext = reply.text
     if not sticktext:
-        if event.reply_to_msg_id:
-            sticktext = reply_message.message
-        else:
-            return await edit_or_reply(event, "need something, hmm")
-    # delete the userbot command,
-    # i don't know why this is required
-    await event.delete()
+        return await edit_delete(event, "`Need text to write..`")
     sticktext = deEmojify(sticktext)
-    # https://docs.python.org/3/library/textwrap.html#textwrap.wrap
     sticktext = textwrap.wrap(sticktext, width=10)
     # converts back the list to a string
     sticktext = "\n".join(sticktext)
     image = Image.new("RGBA", (512, 512), (255, 255, 255, 0))
     draw = ImageDraw.Draw(image)
     fontsize = 230
-    FONT_FILE = await get_font_file(event.client, "@catfonts", font_file_name)
-    font = ImageFont.truetype(FONT_FILE, size=fontsize)
+    json = requests.get(
+        "https://raw.githubusercontent.com/TgCatUB/CatUserbot-Resources/master/Resources/StickerFun/resources.txt"
+    ).json()
+    FONT_FILE = requests.get(random.choice(json["fonts"]))
+    font = ImageFont.truetype(BytesIO(FONT_FILE.content), size=fontsize)
     while draw.multiline_textsize(sticktext, font=font) > (512, 512):
         fontsize -= 3
-        font = ImageFont.truetype(FONT_FILE, size=fontsize)
+        font = ImageFont.truetype(BytesIO(FONT_FILE.content), size=fontsize)
     width, height = draw.multiline_textsize(sticktext, font=font)
     draw.multiline_text(
-        ((512 - width) / 2, (512 - height) / 2), sticktext, font=font, fill=(R, G, B)
+        ((512 - width) / 2, (512 - height) / 2), sticktext, font=font, fill=(RGB)
     )
-    image_stream = io.BytesIO()
+    image_stream = BytesIO()
     image_stream.name = "catuserbot.webp"
     image.save(image_stream, "WebP")
     image_stream.seek(0)
     # finally, reply the sticker
+    await event.delete()
     await event.client.send_file(
         event.chat_id,
         image_stream,
-        caption="cat's Sticklet",
         reply_to=reply_to_id,
     )
-    # cleanup
-    try:
-        os.remove(FONT_FILE)
-    except BaseException:
-        pass
 
 
 @catub.cat_cmd(
@@ -279,7 +252,7 @@ async def quby(event):
         )
     await edit_delete(event, "`Wait, processing.....`")
     temp_name, fontname = file_checker(
-        "https://telegra.ph/file/09f4df5a129758a2e1c9c.jpg"
+        "https://graph.org/file/09f4df5a129758a2e1c9c.jpg"
     )
     lines = 3
     text = soft_deEmojify(text)
@@ -305,7 +278,7 @@ async def quby(event):
         stroke_width=1,
     )
     if len(txt) >= lines:
-        for x in range(0, lines):
+        for x in range(lines):
             text = text.replace(txt[x], "")
         file, _ = higlighted_text(
             file[0],
@@ -322,7 +295,9 @@ async def quby(event):
             stroke_width=1,
         )
     if cmd == "b":
-        cat = convert_tosticker(file[0])
+        cat = (
+            await Convert.to_sticker(event, file[0], file="quby.webp", noedits=True)
+        )[1]
         await event.client.send_file(
             event.chat_id, cat, reply_to=reply_to_id, force_document=False
         )
@@ -365,7 +340,7 @@ async def knife(event):
         )
     await edit_delete(event, "`Wait, processing.....`")
     temp_name, fontname = file_checker(
-        "https://telegra.ph/file/2188367c8c5f43c36aa59.jpg"
+        "https://graph.org/file/2188367c8c5f43c36aa59.jpg"
     )
     text = soft_deEmojify(text)
     if len(text) < 50:
@@ -387,7 +362,9 @@ async def knife(event):
         direction="upwards",
     )
     if cmd == "b":
-        cat = convert_tosticker(file[0])
+        cat = (
+            await Convert.to_sticker(event, file[0], file="knife.webp", noedits=True)
+        )[1]
         await event.client.send_file(
             event.chat_id, cat, reply_to=reply_to_id, force_document=False
         )
@@ -421,7 +398,7 @@ async def doge(event):
     await edit_delete(event, "`Wait, processing.....`")
     text = soft_deEmojify(text)
     temp_name, fontname = file_checker(
-        "https://telegra.ph/file/6f621b9782d9c925bd6c4.jpg"
+        "https://graph.org/file/6f621b9782d9c925bd6c4.jpg"
     )
     font, wrap, lines, ls = (
         (90, 1.9, 5, "-75") if len(text) < 140 else (70, 1.3, 6, "-55")
@@ -445,7 +422,7 @@ async def doge(event):
         stroke_fill="black",
     )
     if len(txt) >= lines:
-        for x in range(0, lines):
+        for x in range(lines):
             text = text.replace(txt[x], "")
         file, _ = higlighted_text(
             file[0],
@@ -465,7 +442,7 @@ async def doge(event):
             stroke_width=1,
             stroke_fill="black",
         )
-    cat = convert_tosticker(file[0])
+    cat = (await Convert.to_sticker(event, file[0], file="doge.webp", noedits=True))[1]
     await event.client.send_file(
         event.chat_id, cat, reply_to=reply_to_id, force_document=False
     )
@@ -506,7 +483,7 @@ async def penguin(event):
         )
     await edit_delete(event, "Wait, processing.....")
     temp_name, fontname = file_checker(
-        "https://telegra.ph/file/ee1fc91bbaef2cc808c7c.png"
+        "https://graph.org/file/ee1fc91bbaef2cc808c7c.png"
     )
     text = soft_deEmojify(text)
     font, wrap, lines = (90, 4, 5) if len(text) < 50 else (70, 4.5, 7)
@@ -533,7 +510,9 @@ async def penguin(event):
         stroke_width=1,
         stroke_fill=fg,
     )
-    cat = convert_tosticker(file[0])
+    cat = (await Convert.to_sticker(event, file[0], file="penguin.webp", noedits=True))[
+        1
+    ]
     await event.client.send_file(
         event.chat_id, cat, reply_to=reply_to_id, force_document=False
     )
@@ -574,7 +553,7 @@ async def gandhi(event):
         )
     await edit_delete(event, "Wait, processing.....")
     temp_name, fontname = file_checker(
-        "https://telegra.ph/file/3bebc56ee82cce4f300ce.jpg"
+        "https://graph.org/file/3bebc56ee82cce4f300ce.jpg"
     )
     text = soft_deEmojify(text)
     font, wrap, lines = (90, 3, 5) if len(text) < 75 else (70, 2.8, 7)
@@ -601,7 +580,9 @@ async def gandhi(event):
         stroke_width=1,
         stroke_fill=fg,
     )
-    cat = convert_tosticker(file[0])
+    cat = (await Convert.to_sticker(event, file[0], file="gandhi.webp", noedits=True))[
+        1
+    ]
     await event.client.send_file(
         event.chat_id, cat, reply_to=reply_to_id, force_document=False
     )

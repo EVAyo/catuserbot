@@ -1,4 +1,12 @@
-# telegraph utils for catuserbot
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# CatUserBot #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Copyright (C) 2020-2023 by TgCatUB@Github.
+
+# This file is part of: https://github.com/TgCatUB/catuserbot
+# and is released under the "GNU v3.0 License Agreement".
+
+# Please see: https://github.com/TgCatUB/catuserbot/blob/master/LICENSE
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 import os
 import random
 import string
@@ -50,7 +58,7 @@ def resize_image(image):
             "{tr}telegraph text <title(optional)>",
         ],
     },
-)  # sourcery no-metrics
+)  # sourcery no-me  # sourcery skip: low-code-quality, low-code-qualitytrics
 async def _(event):
     "To get telegraph link."
     catevent = await edit_or_reply(event, "`processing........`")
@@ -85,7 +93,7 @@ async def _(event):
             ms = (end - start).seconds
             os.remove(downloaded_file_name)
             await catevent.edit(
-                f"**link : **[telegraph](https://telegra.ph{media_urls[0]})\
+                f"**link : **[telegraph](https://graph.org{media_urls[0]})\
                     \n**Time Taken : **`{ms} seconds.`",
                 link_preview=True,
             )
@@ -120,7 +128,7 @@ async def _(event):
             response = telegraph.create_page(title_of_page, html_content=page_content)
         end = datetime.now()
         ms = (end - start).seconds
-        cat = f"https://telegra.ph/{response['path']}"
+        cat = f"https://graph.org/{response['path']}"
         await catevent.edit(
             f"**link : ** [telegraph]({cat})\
                  \n**Time Taken : **`{ms} seconds.`",
